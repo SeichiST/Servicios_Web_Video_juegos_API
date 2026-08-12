@@ -43,6 +43,35 @@ namespace Servicios_Web_Video_juegos_API.Controllers
         {
             try
             {
+                // 1. Encriptar la contraseña del cliente antes de guardar
+                if (!string.IsNullOrEmpty(value.Password))
+                {
+                    value.Password = BCrypt.Net.BCrypt.HashPassword(value.Password);
+                }
+
+                // 2. Gestionar la asignación de roles
+                if (value.IdRols != null && value.IdRols.Any())
+                {
+                    var idsRoles = value.IdRols.Select(r => r.IdRol).ToList();
+                    var rolesBD = await db.Roles.Where(r => idsRoles.Contains(r.IdRol)).ToListAsync();
+                    value.IdRols = rolesBD;
+                }
+                else
+                {
+                    // Asignar rol por defecto (ROLE_CLIENTE = 1) si no se envió alguno
+                    var rolCliente = await db.Roles.FindAsync(1);
+                    if (rolCliente != null)
+                    {
+                        value.IdRols.Add(rolCliente);
+                    }
+                }
+
+                // Asegurar estado activo por defecto
+                if (string.IsNullOrEmpty(value.Estado))
+                {
+                    value.Estado = "1";
+                }
+
                 await db.Clientes.AddAsync(value);
                 await db.SaveChangesAsync();
 
@@ -50,7 +79,7 @@ namespace Servicios_Web_Video_juegos_API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.InnerException!.Message);
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
             }
         }
 
@@ -68,7 +97,7 @@ namespace Servicios_Web_Video_juegos_API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.InnerException!.Message);
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
             }
         }
 
@@ -85,7 +114,7 @@ namespace Servicios_Web_Video_juegos_API.Controllers
                     return BadRequest("Error, no existe el Codigo");
                 }
 
-                //('0' inactivo, '1' activo)
+                // ('0' inactivo, '1' activo)
                 buscado.Estado = "0";
 
                 await db.SaveChangesAsync();
@@ -94,28 +123,8 @@ namespace Servicios_Web_Video_juegos_API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.InnerException!.Message);
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
             }
-        }
-
-        // POST api/<ClientesAPIController>/Login
-        [HttpPost("Login")]
-        public async Task<ActionResult<Cliente>> Login([FromBody] LoginRequestDto request)
-        {
-            var cliente = await db.Clientes
-                .FirstOrDefaultAsync(c => c.Correo == request.Correo && c.Estado == "1");
-
-            if (cliente == null)
-            {
-                return BadRequest("Correo o contraseña incorrectos");
-            }
-
-            if (cliente.Password != request.Password)
-            {
-                return BadRequest("Correo o contraseña incorrectos");
-            }
-
-            return Ok(cliente);
         }
     }
 }
