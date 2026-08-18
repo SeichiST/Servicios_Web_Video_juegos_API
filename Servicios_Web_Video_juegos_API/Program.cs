@@ -8,6 +8,13 @@ builder.Services.AddDbContext<TiendaJuegosContext>(options => options.UseSqlServ
 
 // Add services to the container.
 
+//17-06-2026
+//builder.Services.AddControllers()
+//    .AddJsonOptions(options =>
+//    {
+//        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+//    });
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

@@ -85,18 +85,29 @@ namespace Servicios_Web_Video_juegos_API.Controllers
 
         // PUT api/<ClientesAPIController>
         [HttpPut]
-        public async Task<ActionResult<Cliente>> PutCliente([FromBody] Cliente value)
-        {
-            try
-            {
-                await Task.Run(() => db.Clientes.Update(value));
+        public async Task<ActionResult<Cliente>> PutCliente([FromBody] Cliente value) {
+            try {
+                var existente = await db.Clientes.FindAsync(value.IdCliente);
+
+                if (existente == null) {
+                    return BadRequest("Error, no existe el Cliente");
+                }
+
+                // Se actualizan únicamente los campos de perfil
+                existente.Nombres = value.Nombres;
+                existente.Apellidos = value.Apellidos;
+                existente.Dni = value.Dni;
+                existente.Direccion = value.Direccion;
+                existente.Telefono = value.Telefono;
+                existente.FechaNacimiento = value.FechaNacimiento;
+                existente.Sexo = value.Sexo;
+                existente.Correo = value.Correo;
+                existente.Estado = value.Estado;
 
                 await db.SaveChangesAsync();
-
                 return Ok("Cliente Actualizado correctamente");
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return BadRequest(ex.InnerException?.Message ?? ex.Message);
             }
         }
