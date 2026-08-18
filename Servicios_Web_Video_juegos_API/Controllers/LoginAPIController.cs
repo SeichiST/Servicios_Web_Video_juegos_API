@@ -37,7 +37,8 @@ namespace Servicios_Web_Video_juegos_API.Controllers
             return Ok(usuario);
 
         }
+        
 
-     
+
     }
 }

@@ -15,10 +15,9 @@ namespace Servicios_Web_Video_juegos_API.Controllers
         {
             db = _db;
         }
-
         // GET: api/<VentasAPIController>/GetVentas (Reporte general)
         [HttpGet("GetVentas")]
-        public async Task<List<Venta>> GetVentas()
+        public async Task<List<VentaResponseDto>> GetVentas()
         {
             var listado = await db.Ventas
                 .Include(v => v.IdClienteNavigation)
@@ -26,12 +25,27 @@ namespace Servicios_Web_Video_juegos_API.Controllers
                 .ThenInclude(d => d.IdJuegosNavigation)
                 .ToListAsync();
 
-            return listado;
+            return listado.Select(obj => new VentaResponseDto
+            {
+                IdVenta = obj.IdVenta,
+                FechaVenta = obj.FechaVenta,
+                MontoTotal = obj.MontoTotal,
+                Estado = obj.Estado,
+                NombreCliente = $"{obj.IdClienteNavigation.Nombres} {obj.IdClienteNavigation.Apellidos}",
+                Detalles = obj.Detalles.Select(d => new DetalleResponseDto
+                {
+                    IdJuegos = d.IdJuegos,
+                    NombreJuego = d.IdJuegosNavigation.Descripcion,
+                    Imagen = d.IdJuegosNavigation.Imagen,
+                    Cantidad = d.Cantidad,
+                    Precio = d.Precio
+                }).ToList()
+            }).ToList();
         }
 
         // GET api/<VentasAPIController>/GetVenta/5
         [HttpGet("GetVenta/{id}")]
-        public async Task<ActionResult<Venta>> GetVenta(int id)
+        public async Task<ActionResult<VentaResponseDto>> GetVenta(int id)
         {
             var obj = await db.Ventas
                 .Include(v => v.IdClienteNavigation)
@@ -40,24 +54,55 @@ namespace Servicios_Web_Video_juegos_API.Controllers
                 .FirstOrDefaultAsync(v => v.IdVenta == id);
 
             if (obj == null)
-            {
                 return BadRequest("Codigo No Existe");
-            }
 
-            return Ok(obj);
+            var dto = new VentaResponseDto
+            {
+                IdVenta = obj.IdVenta,
+                FechaVenta = obj.FechaVenta,
+                MontoTotal = obj.MontoTotal,
+                Estado = obj.Estado,
+                NombreCliente = $"{obj.IdClienteNavigation.Nombres} {obj.IdClienteNavigation.Apellidos}",
+                Detalles = obj.Detalles.Select(d => new DetalleResponseDto
+                {
+                    IdJuegos = d.IdJuegos,
+                    NombreJuego = d.IdJuegosNavigation.Descripcion,
+                    Imagen = d.IdJuegosNavigation.Imagen,
+                    Cantidad = d.Cantidad,
+                    Precio = d.Precio
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
 
         // GET api/<VentasAPIController>/GetVentasCliente/1 (Historial por cliente)
         [HttpGet("GetVentasCliente/{idCliente}")]
-        public async Task<List<Venta>> GetVentasCliente(int idCliente)
+        public async Task<List<VentaResponseDto>> GetVentasCliente(int idCliente)
         {
             var listado = await db.Ventas
                 .Where(v => v.IdCliente == idCliente)
                 .Include(v => v.Detalles)
                 .ThenInclude(d => d.IdJuegosNavigation)
+                .Include(v => v.IdClienteNavigation)
                 .ToListAsync();
 
-            return listado;
+            return listado.Select(obj => new VentaResponseDto
+            {
+                IdVenta = obj.IdVenta,
+                FechaVenta = obj.FechaVenta,
+                MontoTotal = obj.MontoTotal,
+                Estado = obj.Estado,
+                NombreCliente = $"{obj.IdClienteNavigation.Nombres} {obj.IdClienteNavigation.Apellidos}",
+                Detalles = obj.Detalles.Select(d => new DetalleResponseDto
+                {
+                    IdJuegos = d.IdJuegos,
+                    NombreJuego = d.IdJuegosNavigation.Descripcion,
+                    Imagen = d.IdJuegosNavigation.Imagen,
+                    Cantidad = d.Cantidad,
+                    Precio = d.Precio
+                }).ToList()
+            }).ToList();
         }
 
         // POST api/<VentasAPIController>/RegistrarVenta (Proceso de Carrito de Compras)

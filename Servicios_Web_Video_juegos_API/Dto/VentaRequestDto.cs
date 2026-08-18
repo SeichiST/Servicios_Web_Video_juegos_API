@@ -5,4 +5,6 @@
         public int IdCliente { get; set; }
         public List<DetalleRequestDto> Detalles { get; set; } = new();
     }
+
+ 
 }
