@@ -19,5 +19,5 @@ public partial class Juego
 
     public virtual ICollection<Detalle> Detalles { get; set; } = new List<Detalle>();
 
-    public virtual Categoria IdCategoriaNavigation { get; set; } = null!;
+    public virtual Categoria? IdCategoriaNavigation { get; set; }
 }
